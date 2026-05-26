@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: petcarelog-config
+data:
+  SPRING_PROFILES_ACTIVE: default
+  SERVER_PORT: "8080"
+  DB_HOST: <RDS_ENDPOINT>
+  DB_PORT: "3306"
+  DB_NAME: "petcarelog"

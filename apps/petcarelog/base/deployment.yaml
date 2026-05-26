@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petcarelog
+  labels:
+    app: petcarelog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: petcarelog
+  template:
+    metadata:
+      labels:
+        app: petcarelog
+    spec:
+      serviceAccountName: petcarelog-sa
+      containers:
+        - name: petcarelog
+          image: <ECR_IMAGE_URI>:<IMAGE_TAG>
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+
+          envFrom:
+            - configMapRef:
+                name: petcarelog-config
+
+          env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: petcarelog-secret
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: petcarelog-secret
+                  key: DB_PASSWORD
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
