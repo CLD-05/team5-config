@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: petcarelog-applicationset
+  namespace: argocd # ArgoCD가 설치된 네임스페이스
+spec:
+  # 1. 생성기 (Generator): 어떤 환경들을 반복문(Loop) 돌릴지 정의합니다.
+  generators:
+    - list:
+        elements:
+          - env: dev
+            cluster: https://kubernetes.default.svc # 로컬 EKS 클러스터 주소
+          - env: prod
+            cluster: https://kubernetes.default.svc
+
+  # 2. 템플릿 (Template): 위의 리스트를 바탕으로 찍어낼 ArgoCD Application의 붕어빵 틀입니다.
+  template:
+    metadata:
+      # {{env}} 자리에 dev와 prod가 쏙쏙 들어가면서 애플리케이션 이름이 자동으로 바뀝니다.
+      name: 'petcarelog-{{env}}'
+    spec:
+      # 앞에서 만든 프로젝트(울타리)와 연동합니다. (petcarelog-dev-project 등)
+      project: 'petcarelog-{{env}}-project'
+      
+      # 소스 (Source): 쿠버네티스 배포 설정 파일(Kustomize)이 있는 Git 저장소 위치
+      source:
+        repoURL: 'https://github.com/CLD-05/team5-config.git'
+        targetRevision: HEAD # 가장 최신 커밋을 추적
+        path: 'apps/petcarelog/overlays/{{env}}' # 각 환경별 폴더 경로를 동적으로 지정
+
+      # 목적지 (Destination): 이 앱을 배포할 쿠버네티스 클러스터와 네임스페이스
+      destination:
+        server: '{{cluster}}'
+        namespace: 'petcarelog-{{env}}' # dev 폴더는 dev 네임스페이스에 배포
+
+      # 동기화 정책 (Sync Policy): Git의 코드와 쿠버네티스 상태를 어떻게 맞출 것인가
+      syncPolicy:
+        automated:
+          prune: true # Git에서 지운 리소스는 쿠버네티스에서도 자동으로 삭제
+          selfHeal: true # 누군가 쿠버네티스 콘솔에서 수동으로 고쳐도 Git 코드로 강제 원복
+        syncOptions:
+          - CreateNamespace=true # 네임스페이스가 없으면 자동으로 만들어라
