@@ -8,11 +8,11 @@ spec:
     - list:
         elements:
           - env: dev
-            cluster: DEV_CLUSTER_SERVER_URL
+            cluster: "https://A03190C7D9EE01AAEB6B4267879D819A.gr7.ap-northeast-2.eks.amazonaws.com"
             namespace: petcarelog-dev
 
           - env: prod
-            cluster: PROD_CLUSTER_SERVER_URL
+            cluster: "https://341C11627D397F927673C22681F5E6F6.gr7.ap-northeast-2.eks.amazonaws.com" 
             namespace: petcarelog-prod
 
   template:
