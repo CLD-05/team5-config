@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petcarelog
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: petcarelog
+          image: 194722398200.dkr.ecr.ap-northeast-2.amazonaws.com/team5-petcarelog-dev:latest

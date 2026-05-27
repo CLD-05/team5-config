@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: petcarelog-config
+  namespace: petcarelog-prod
+data:
+  DB_HOST: "team5-petcarelog-prod-rds.cx482c6a63zp.ap-northeast-2.rds.amazonaws.com"
+  DB_PORT: "3306"
+  DB_NAME: "petcarelog_prod"
+
+  REDIS_HOST: "team5-petcarelog-prod-redis.50cal1.ng.0001.apn2.cache.amazonaws.com"
+  REDIS_PORT: "6379"
+  REDIS_SSL_ENABLED: "false"
+
+  AWS_REGION: "ap-northeast-2"
+  S3_BUCKET_NAME: "team5-petcarelog-prod-images-194722398200"
+  S3_PET_IMAGE_PREFIX: "pets"

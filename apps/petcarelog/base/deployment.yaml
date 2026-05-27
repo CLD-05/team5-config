@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petcarelog
+  labels:
+    app: petcarelog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: petcarelog
+  template:
+    metadata:
+      labels:
+        app: petcarelog
+    spec:
+      serviceAccountName: petcarelog-app-sa
+
+      containers:
+        - name: petcarelog
+          image: 194722398200.dkr.ecr.ap-northeast-2.amazonaws.com/team5-petcarelog-dev:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 8080
+
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: petcarelog-config
+                  key: DB_HOST
+
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: petcarelog-config
+                  key: DB_PORT
+
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: petcarelog-config
+                  key: DB_NAME
+
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: petcarelog-secret
+                  key: DB_USERNAME
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: petcarelog-secret
+                  key: DB_PASSWORD
+
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: petcarelog-config
+                  key: REDIS_HOST
+
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: petcarelog-config
+                  key: REDIS_PORT
+
+            - name: REDIS_SSL_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: petcarelog-config
+                  key: REDIS_SSL_ENABLED
+
+            - name: REDIS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: petcarelog-secret
+                  key: REDIS_USERNAME
+                  optional: true
+
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: petcarelog-secret
+                  key: REDIS_PASSWORD
+                  optional: true
+
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: petcarelog-config
+                  key: AWS_REGION
+
+            - name: S3_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: petcarelog-config
+                  key: S3_BUCKET_NAME
+
+            - name: S3_PET_IMAGE_PREFIX
+              valueFrom:
+                configMapKeyRef:
+                  name: petcarelog-config
+                  key: S3_PET_IMAGE_PREFIX
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 80
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 700m
+              memory: 1Gi

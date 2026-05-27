@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: petcarelog-ingress
+  annotations:
+    alb.ingress.kubernetes.io/group.name: petcarelog-prod
+    alb.ingress.kubernetes.io/tags: Environment=prod,Project=petcarelog,team=team5
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: petcarelog-service
+                port:
+                  number: 80
+
+
+# 도메인과 HTTPS를 붙이면 아래로 변경하기
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: petcarelog-ingress
+#   annotations:
+#     alb.ingress.kubernetes.io/group.name: petcarelog-prod
+#     alb.ingress.kubernetes.io/tags: Environment=prod,Project=petcarelog,team=team5
+
+#     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+#     alb.ingress.kubernetes.io/certificate-arn: "PROD_ACM_CERTIFICATE_ARN"
+#     alb.ingress.kubernetes.io/ssl-redirect: "443"
+# spec:
+#   rules:
+#     - host: petcarelog.example.com
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: petcarelog-service
+#                 port:
+#                   number: 80
