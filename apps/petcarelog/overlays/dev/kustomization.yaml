@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: petcarelog-dev
+
+resources:
+  - namespace.yaml
+  - ../../base
+
+patches:
+  - path: patch-deployment.yaml
+
+configMapGenerator:
+  - name: petcarelog-config
+    behavior: merge
+    literals:
+      - SPRING_PROFILES_ACTIVE=dev
+
+images:
+  - name: petcarelog
+    newName: 194722398200.dkr.ecr.ap-northeast-2.amazonaws.com/petcarelog
+    newTag: dev
