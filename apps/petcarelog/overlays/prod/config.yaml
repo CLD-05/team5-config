@@ -13,5 +13,5 @@ data:
   REDIS_SSL_ENABLED: "false"
 
   AWS_REGION: "ap-northeast-2"
-  S3_BUCKET_NAME: "team5-petcarelog-prod-images-194722398200"
+  S3_BUCKET_NAME: "team5-petcarelog-prod-images-194722398200" 
   S3_PET_IMAGE_PREFIX: "pets"
