@@ -6,6 +6,14 @@ metadata:
 spec:
   description: Monitoring stack for dev and prod EKS
 
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  description: Monitoring stack for dev and prod EKS
+
   sourceRepos:
     - https://prometheus-community.github.io/helm-charts
     - https://github.com/CLD-05/team5-config.git
@@ -26,4 +34,4 @@ spec:
 
   namespaceResourceWhitelist:
     - group: "*"
-      kind: "*" 
+      kind: "*"

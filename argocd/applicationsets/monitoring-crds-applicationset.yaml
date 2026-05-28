@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: monitoring-crds-applicationset
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            cluster: "https://4F76F579D9F28BA8D65131DCA870D2F4.gr7.ap-northeast-2.eks.amazonaws.com"
+
+          - env: prod
+            cluster: "https://2467051C6CE1E002CF1634B37DFC3D77.gr7.ap-northeast-2.eks.amazonaws.com"
+
+  template:
+    metadata:
+      name: 'monitoring-crds-{{env}}'
+    spec:
+      project: monitoring
+
+      source:
+        repoURL: https://prometheus-community.github.io/helm-charts
+        chart: prometheus-operator-crds
+        targetRevision: 17.0.2
+
+      destination:
+        server: '{{cluster}}'
+        namespace: monitoring
+
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
