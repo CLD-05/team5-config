@@ -13,8 +13,12 @@ spec:
   destinations:
     - server: "https://4F76F579D9F28BA8D65131DCA870D2F4.gr7.ap-northeast-2.eks.amazonaws.com"
       namespace: monitoring
+    - server: "https://4F76F579D9F28BA8D65131DCA870D2F4.gr7.ap-northeast-2.eks.amazonaws.com"
+      namespace: kube-system
     - server: "https://2467051C6CE1E002CF1634B37DFC3D77.gr7.ap-northeast-2.eks.amazonaws.com"
       namespace: monitoring
+    - server: "https://2467051C6CE1E002CF1634B37DFC3D77.gr7.ap-northeast-2.eks.amazonaws.com"
+      namespace: kube-system
 
   clusterResourceWhitelist:
     - group: "*"
