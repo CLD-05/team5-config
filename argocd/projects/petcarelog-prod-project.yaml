@@ -10,7 +10,7 @@ spec:
     - https://github.com/CLD-05/team5-config.git
 
   destinations:
-    - server: "https://341C11627D397F927673C22681F5E6F6.gr7.ap-northeast-2.eks.amazonaws.com"
+    - server: "https://2467051C6CE1E002CF1634B37DFC3D77.gr7.ap-northeast-2.eks.amazonaws.com"
       namespace: petcarelog-prod
 
   clusterResourceWhitelist:
