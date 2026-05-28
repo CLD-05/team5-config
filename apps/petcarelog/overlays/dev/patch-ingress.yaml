@@ -4,6 +4,7 @@ metadata:
   name: petcarelog-ingress
   annotations:
     alb.ingress.kubernetes.io/group.name: petcarelog-dev
+    alb.ingress.kubernetes.io/load-balancer-name: team5-petcarelog-dev-alb 
     alb.ingress.kubernetes.io/tags: Environment=dev,Project=petcarelog,team=team5
 spec:
   rules:

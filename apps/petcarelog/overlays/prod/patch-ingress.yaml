@@ -4,6 +4,7 @@ metadata:
   name: petcarelog-ingress
   annotations:
     alb.ingress.kubernetes.io/group.name: petcarelog-prod
+    alb.ingress.kubernetes.io/load-balancer-name: team5-petcarelog-prod-alb #추가 부분
     alb.ingress.kubernetes.io/tags: Environment=prod,Project=petcarelog,team=team5
 spec:
   rules:
@@ -25,14 +26,15 @@ spec:
 #   name: petcarelog-ingress
 #   annotations:
 #     alb.ingress.kubernetes.io/group.name: petcarelog-prod
+#     alb.ingress.kubernetes.io/load-balancer-name: team5-petcarelog-prod-alb #추가 부분
 #     alb.ingress.kubernetes.io/tags: Environment=prod,Project=petcarelog,team=team5
 
 #     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
-#     alb.ingress.kubernetes.io/certificate-arn: "PROD_ACM_CERTIFICATE_ARN"
+#     alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-northeast-2:131745734264:certificate/..."
 #     alb.ingress.kubernetes.io/ssl-redirect: "443"
 # spec:
 #   rules:
-#     - host: petcarelog.example.com
+#     - host: api.yuhyun-kim.com
 #       http:
 #         paths:
 #           - path: /
