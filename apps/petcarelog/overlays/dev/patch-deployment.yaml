@@ -9,3 +9,10 @@ spec:
       containers:
         - name: petcarelog
           image: 194722398200.dkr.ecr.ap-northeast-2.amazonaws.com/team5-petcarelog-dev:51d2b9a48f7d2868d2d46763adf896c49c8c2ddf
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi

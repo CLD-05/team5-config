@@ -8,6 +8,7 @@ resources:
   - namespace.yaml
   - serviceaccount.yaml
   - config.yaml
+  - hpa.yaml
 
 patches:
   - path: patch-deployment.yaml
