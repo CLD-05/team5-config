@@ -1,9 +1,9 @@
 # PetCareLog (team5-config)
 
 ## 📑 프로젝트 소개
-PetCareLog GitOps Configuration은 서비스의 모든 인프라 환경(dev, prod)과 관제 시스템을 쿠버네티스 매니페스트를 통해 유기적으로 제어하고 자동화하는 저장소입니다.
+PetCareLog GitOps Configuration은 서비스의 모든 인프라 환경(dev, prod)과 관제 시스템을 쿠버네티스 매니페스트를 통해 유기적으로 제어하고 자동화하는 저장소입니다.  
 애플리케이션 배포와 통합 모니터링을 Argo CD와 연동하여 서버 환경의 일관성을 유지하고 안정적인 배포 파이프라인을 유지하는 것을 목표로 합니다.
-현재 프로젝트는 다중 클러스터 동기화, 무중단 배포 제어, 실시간 메트릭 관제를 중심으로 구성되어 있습니다.
+현재 프로젝트는 다중 클러스터 동기화, 무중단 배포 제어, 실시간 메트릭 관제를 중심으로 구성되어 있습니다.  
 애플리케이션 사양 관리는 `apps/petcarelog/base/overlays`, 배포 정책 제어는 `argocd/projects/applicationsets`, 통합 모니터링 및 실시간 관제는 `monitoring/kube-prometheus-stack` 도메인으로 명확히 분리되어 있습니다.
 
 ## 🔔 목표
@@ -283,7 +283,7 @@ argocd cluster add arn:aws:eks:ap-northeast-2:<ACCOUNT_ID>:cluster/team5-petcare
 ---
 
 ## 🔑보안 관리 및 로컬 Secret 수동 생성 가이드
-> ⚠️ 보안 수칙 : 
+> ⚠️ 보안 수칙
 > 데이터베이스 암호 및 그라파나 마스터 패스워드가 포함된 실제 Secret 매니페스트 파일은 절대로 GitHub 저장소에 push하지 않습니다.
 > 배포 전 각 클러스터 타겟팅 콘텍스트로 이동하여 수동 인라인 명령어로 선배포를 완료해야 합니다.
 
