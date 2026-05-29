@@ -182,7 +182,7 @@ monitoring-applicationset
 └── monitoring-prod
 ```
 
-> 💡 CRD 선배포 사유: Prometheus, Alertmanager, ServiceMonitor, PrometheusRule, PodMonitor 등의 리소스들은 Kubernetes 기본 리소스가 아니라 Prometheus Operator CRD가 선행 설치되어야 인식이 가능하기 때문입니다.
+> **💡 CRD 선배포 사유:** Prometheus, Alertmanager, ServiceMonitor, PrometheusRule, PodMonitor 등의 리소스들은 Kubernetes 기본 리소스가 아니라 Prometheus Operator CRD가 선행 설치되어야 인식이 가능하기 때문입니다.
 
 ### 📈 Grafana 환경별 대시보드 구성
 
@@ -283,8 +283,8 @@ argocd cluster add arn:aws:eks:ap-northeast-2:<ACCOUNT_ID>:cluster/team5-petcare
 ---
 
 ## 🔑보안 관리 및 로컬 Secret 수동 생성 가이드
-> ⚠️ 보안 수칙
-> 데이터베이스 암호 및 그라파나 마스터 패스워드가 포함된 실제 Secret 매니페스트 파일은 절대로 GitHub 저장소에 push하지 않습니다.
+> **⚠️ 보안 수칙 :**
+> 데이터베이스 암호 및 그라파나 마스터 패스워드가 포함된 실제 Secret 매니페스트 파일은 절대로 GitHub 저장소에 push하지 않습니다.  
 > 배포 전 각 클러스터 타겟팅 콘텍스트로 이동하여 수동 인라인 명령어로 선배포를 완료해야 합니다.
 
 ### 1. PetCareLog 애플리케이션 연동 데이터베이스 암호 주입
