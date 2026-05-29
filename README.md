@@ -283,7 +283,7 @@ argocd cluster add arn:aws:eks:ap-northeast-2:<ACCOUNT_ID>:cluster/team5-petcare
 ---
 
 ## 🔑보안 관리 및 로컬 Secret 수동 생성 가이드
-> **⚠️ 보안 수칙 :**
+> **⚠️ 보안 수칙**  
 > 데이터베이스 암호 및 그라파나 마스터 패스워드가 포함된 실제 Secret 매니페스트 파일은 절대로 GitHub 저장소에 push하지 않습니다.  
 > 배포 전 각 클러스터 타겟팅 콘텍스트로 이동하여 수동 인라인 명령어로 선배포를 완료해야 합니다.
 
@@ -355,8 +355,8 @@ argocd app sync monitoring-prod
 
 ## 🚨 트러블슈팅 가이드
 ### Application이 Unknown / Degraded인 경우
-> **원인:** Argo CD에서 애플리케이션 상태가 정상적으로 동기화되지 않거나 구동에 실패함.
-- **상세 메시지 확인 명령어:**
+> **원인:** Argo CD에서 애플리케이션 상태가 정상적으로 동기화되지 않거나 구동에 실패함.  
+> **상세 메시지 확인 명령어:**
 ```bash
 argocd app get <APPLICATION_NAME>
 # 또는
@@ -365,8 +365,8 @@ kubectl describe application <APPLICATION_NAME> -n argocd
 - **주요 체크리스트:** repoURL 오타 여부, Private 레포지토리 토큰 인증 문제, AppProject destination 및 sourceRepos 명세 불일치, 네임스페이스 권한 누락 여부 검증
 
 ### namespace is not permitted in project 에러 발생 시
-> **원인:** AppProject가 접근할 수 있도록 허용된 Namespace 범위를 벗어난 곳에 배포를 시도함.
-- **해결 방법:** AppProject 제어 설정 파일의 destinations 항목에 해당 대상을 수동 명시해야 합니다.
+> **원인:** AppProject가 접근할 수 있도록 허용된 Namespace 범위를 벗어난 곳에 배포를 시도함.  
+> **해결 방법:** AppProject 제어 설정 파일의 destinations 항목에 해당 대상을 수동 명시해야 합니다.
 ```YAML
 destinations:
   - server: DEV_CLUSTER_SERVER_URL
@@ -376,16 +376,16 @@ destinations:
 ```
 
 ### unable to resolve parseableType for GroupVersionKind 에러 발생 시
-> **원인:** Prometheus Operator CRD(사용자 정의 리소스 정의)가 클러스터에 먼저 설치되지 않은 상태에서 Alertmanager, Prometheus, ServiceMonitor 등의 커스텀 리소스를 비교·배포하려고 했을 때 발생합니다.
-- **해결 방법:** 반드시 위의 '최종 인프라 배포 적용 순서' 파이프라인 단계를 엄수하여 CRD 설치셋(3단계)을 완전히 가동 및 동기화한 뒤 본체 세트(4단계)를 통과시키십시오.
+> **원인:** Prometheus Operator CRD(사용자 정의 리소스 정의)가 클러스터에 먼저 설치되지 않은 상태에서 Alertmanager, Prometheus, ServiceMonitor 등의 커스텀 리소스를 비교·배포하려고 했을 때 발생합니다.  
+> **해결 방법:** 반드시 위의 '최종 인프라 배포 적용 순서' 파이프라인 단계를 엄수하여 CRD 설치셋(3단계)을 완전히 가동 및 동기화한 뒤 본체 세트(4단계)를 통과시키십시오.
 
 ### Grafana 대시보드 화면에서 No data가 출력되는 경우
-> **원인:** 환경별 콘텍스트(Context) 조회 오류 또는 메트릭 수집 타겟 라우팅 단절.
-- **주요 체크리스트:** Dev 그라파나 관제 환경에서 실수로 Prod 네임스페이스를 역조회하고 있지 않은지 확인, 프로메테우스 타겟 수집 상태 확인(kubectl get servicemonitor -A)
+> **원인:** 환경별 콘텍스트(Context) 조회 오류 또는 메트릭 수집 타겟 라우팅 단절.  
+> **주요 체크리스트:** Dev 그라파나 관제 환경에서 실수로 Prod 네임스페이스를 역조회하고 있지 않은지 확인, 프로메테우스 타겟 수집 상태 확인(kubectl get servicemonitor -A)
 
 ### /actuator/prometheus 접속 시 로그인 페이지가 강제 팝업되는 경우
-> **원인:** Spring Security 보안 정책에 의해 프로메테우스 메트릭 수집 경로가 차단됨.
-- **해결 방법:** Spring Boot 애플리케이션 소스코드의 보안 설정에서 관련 Endpoint가 인가 없이 접근할 수 있도록 permitAll() 처리가 되어야 합니다.
+> **원인:** Spring Security 보안 정책에 의해 프로메테우스 메트릭 수집 경로가 차단됨.  
+> **해결 방법:** Spring Boot 애플리케이션 소스코드의 보안 설정에서 관련 Endpoint가 인가 없이 접근할 수 있도록 permitAll() 처리가 되어야 합니다.
 ```java
 .requestMatchers(
     "/actuator/health",
