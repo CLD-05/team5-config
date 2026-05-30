@@ -8,8 +8,10 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: petcarelog
+
   minReplicas: 2
   maxReplicas: 3
+
   metrics:
     - type: Resource
       resource:
@@ -18,7 +20,7 @@ spec:
           type: Utilization
           averageUtilization: 30
 
-    behavior:
+  behavior:
     scaleDown:
       stabilizationWindowSeconds: 60
       policies:
