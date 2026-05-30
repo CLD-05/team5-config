@@ -5,6 +5,14 @@ grafana:
   service:
     type: ClusterIP
 
+  persistence:
+    enabled: true
+    type: pvc
+    storageClassName: gp2
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi  
+
   admin:
     existingSecret: grafana-admin-secret
     userKey: admin-user
