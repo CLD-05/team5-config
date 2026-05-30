@@ -781,8 +781,6 @@ kubectl get servicemonitor -n petcarelog-prod
 | 신솔미 | 팀원 |
 | 김광호 | 팀원 |
 
-> 실제 팀원 이름과 담당 역할에 맞게 수정해 주세요.
-
 <br>
 
 ## 📌 참고
