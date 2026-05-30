@@ -14,7 +14,7 @@ grafana:
     size: 5Gi  
 
   admin:
-    existingSecret: grafana-admin-secret
+    existingSecret: grafana-admin-secret 
     userKey: admin-user
     passwordKey: admin-password
 
