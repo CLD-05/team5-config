@@ -1,51 +1,119 @@
-# PetCareLog (team5-config)
+# PetCareLog Config
 
-## 📑 프로젝트 소개
-PetCareLog GitOps Configuration은 서비스의 모든 인프라 환경(dev, prod)과 관제 시스템을 쿠버네티스 매니페스트를 통해 유기적으로 제어하고 자동화하는 저장소입니다.  
-애플리케이션 배포와 통합 모니터링을 Argo CD와 연동하여 서버 환경의 일관성을 유지하고 안정적인 배포 파이프라인을 유지하는 것을 목표로 합니다.
-현재 프로젝트는 다중 클러스터 동기화, 무중단 배포 제어, 실시간 메트릭 관제를 중심으로 구성되어 있습니다.  
-애플리케이션 사양 관리는 `apps/petcarelog/base/overlays`, 배포 정책 제어는 `argocd/projects/applicationsets`, 통합 모니터링 및 실시간 관제는 `monitoring/kube-prometheus-stack` 도메인으로 명확히 분리되어 있습니다.
+> PetCareLog 서비스의 Kubernetes Manifest, Argo CD ApplicationSet, 모니터링 설정을 관리하는 GitOps 설정 저장소입니다.  
+> 이 저장소는 dev/prod 환경의 애플리케이션 배포와 Prometheus/Grafana 기반 모니터링 구성을 선언적으로 관리합니다.
 
-## 🔔 목표
-- **인프라 환경의 일관성 보장:** Kustomize를 통해 개발(dev)과 운영(prod) 환경의 설정 차이를 최소화하고 표준화된 배포 템플릿 유지
-- **선언적 GitOps 배포 자동화:** 코드 변경 사항이 Argo CD를 통해 실시간으로 클러스터에 반영되는 무중단 배포 체계 선언
-- **안전한 다중 클러스터 권한 분리:** AppProject 설정을 기반으로 환경별 리소스 접근 제어 및 클러스터 간 보안 경계 확립
-- **애플리케이션 구동 현황 관제:** 프로메테우스와 그라파나를 연동하여 실시간 서버 자원 및 Spring Boot 비즈니스 메트릭 정밀 추적
-- **리스크 최소화를 위한 선행 배포 준수:** Prometheus Operator CRD와 관제 본체를 분리 배포하여 인프라 생성 및 확장 시 발생할 수 있는 종속성 오류 원천 차단
+<br>
 
----
+## 📌 프로젝트 개요
 
-## 📂 레포지토리 역할
-`team5-config`는 PetCareLog 서비스의 Kubernetes 매니페스트와 Argo CD 설정을 제어하는 **단일 진실 공급원 (Single Source of Truth)** 역할을 하는 GitOps 저장소입니다.
+`team5-config`는 PetCareLog 프로젝트의 **배포 설정 전용 저장소**입니다.
 
-### 🛠️ 주요 관리 대상
-* **Application Manifests:** Kustomize 기반의 인프라 환경별(dev/prod) Overlay 매니페스트 관리
-* **Argo CD Core Architecture:** 멀티 클러스터 제어를 위한 AppProject 및 자동 가동용 ApplicationSet
-* **Observability (모니터링):** `kube-prometheus-stack` 기반 Metric 수집 엔진, Prometheus Operator CRD 및 Spring Boot 모니터링용 ServiceMonitor
+애플리케이션 소스 코드는 `team5-app`, AWS 인프라 코드는 `team5-infra`, Kubernetes 배포 설정은 `team5-config`로 분리하여 관리합니다.  
+이 저장소는 Argo CD가 바라보는 **Single Source of Truth** 역할을 하며, Git에 선언된 상태를 기준으로 dev/prod EKS 클러스터에 애플리케이션과 모니터링 리소스를 배포합니다.
 
----
+<br>
 
-## 🔄 전체 배포 흐름 (GitOps Pipeline)
-PetCareLog는 애플리케이션 소스 코드, 인프라 코드, 배포 설정을 각각 다른 레포지토리로 분리하여 관리합니다.
+## 목차
 
-<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/6ae45393-f9d9-49fc-9b5f-3f2cf51aa3f7" />
+- [프로젝트 개요](#overview)
+- [저장소 역할](#repository-role)
+- [전체 아키텍처](#architecture)
+- [기술 스택](#tech-stack)
+- [디렉토리 구조](#directory-structure)
+- [사전 요구 사항](#prerequisites)
+- [환경 구성](#environment-config)
+- [설치 및 적용 방법](#installation)
+- [사용법](#usage)
+- [Argo CD 구성](#argocd)
+- [Kustomize 구성](#kustomize)
+- [모니터링 구성](#monitoring)
+- [Grafana Dashboard](#grafana-dashboard)
+- [배포 흐름](#deployment-flow)
+- [운영 시 주의 사항](#notes)
+- [저자 및 기여자](#contributors)
 
-Argo CD는 management EKS에 설치되어 있으며, dev/prod EKS 클러스터를 등록하여 원격으로 배포를 관리합니다.
+<br>
+
+<a id="repository-role"></a>
+
+## ✅ 저장소 역할
+
+PetCareLog는 역할에 따라 저장소를 분리하여 관리합니다.
+
+| 저장소 | 역할 |
+|---|---|
+| [`team5-app`](https://github.com/CLD-05/team5-app) | Spring Boot 애플리케이션, Dockerfile, GitHub Actions |
+| [`team5-infra`](https://github.com/CLD-05/team5-infra) | Terraform 기반 AWS 인프라 관리 |
+| [`team5-config`](https://github.com/CLD-05/team5-config) | Kubernetes Manifest, Argo CD GitOps 배포 설정 |
+
+<br>
+
+`team5-config`는 다음 리소스를 관리합니다.
+
+| 구분 | 관리 대상 |
+|---|---|
+| Application Manifest | Deployment, Service, Ingress, ConfigMap, ServiceAccount, HPA, ServiceMonitor |
+| GitOps | Argo CD AppProject, ApplicationSet |
+| Environment Overlay | dev/prod 환경별 Kustomize overlay |
+| Monitoring | kube-prometheus-stack Helm values, Grafana dashboard JSON |
+
+<br>
+
+<a id="architecture"></a>
+
+## 🧭 전체 아키텍처
+
+이 프로젝트는 management EKS에 설치된 Argo CD가 dev/prod EKS 클러스터를 관리하는 구조입니다.
 
 ```text
-management EKS
+team5-config Repository
+        │
+        ▼
+Management EKS
 └── Argo CD
-    ├── petcarelog-dev 배포
-    ├── petcarelog-prod 배포
-    ├── monitoring-crds-dev 배포
-    ├── monitoring-crds-prod 배포
-    ├── monitoring-dev 배포
-    └── monitoring-prod 배포
+    ├── petcarelog-dev        → Dev EKS / petcarelog-dev namespace
+    ├── petcarelog-prod       → Prod EKS / petcarelog-prod namespace
+    ├── monitoring-crds-dev   → Dev EKS / monitoring namespace
+    ├── monitoring-crds-prod  → Prod EKS / monitoring namespace
+    ├── monitoring-dev        → Dev EKS / monitoring namespace
+    └── monitoring-prod       → Prod EKS / monitoring namespace
 ```
 
----
+<br>
 
-## 🗂️ 디렉토리 구조
+### 배포 환경
+
+| 환경 | Namespace | 주요 용도 |
+|---|---|---|
+| dev | `petcarelog-dev` | 개발 및 테스트 배포 |
+| prod | `petcarelog-prod` | 운영 배포 |
+| monitoring | `monitoring` | Prometheus, Grafana, Alertmanager |
+
+<br>
+
+<a id="tech-stack"></a>
+
+## 🛠 기술 스택
+
+| 구분 | 기술 |
+|---|---|
+| Container Orchestration | Kubernetes, Amazon EKS |
+| GitOps | Argo CD, ApplicationSet |
+| Manifest 관리 | Kustomize |
+| Ingress | AWS Load Balancer Controller, ALB Ingress |
+| Auto Scaling | HorizontalPodAutoscaler |
+| Monitoring | Prometheus, Grafana, Alertmanager |
+| Metrics | ServiceMonitor, Spring Boot Actuator, Micrometer |
+| Dashboard | Grafana Dashboard JSON |
+| Secret 관리 | Kubernetes Secret, Secret Example 파일 |
+| AWS 권한 | IRSA, ServiceAccount Annotation |
+
+<br>
+
+<a id="directory-structure"></a>
+
+## 📁 디렉토리 구조
 
 ```text
 team5-config
@@ -55,23 +123,31 @@ team5-config
 │       │   ├── deployment.yaml
 │       │   ├── service.yaml
 │       │   ├── ingress.yaml
-│       │   ├── configmap.yaml
-│       │   ├── serviceaccount.yaml
 │       │   ├── servicemonitor.yaml
 │       │   └── kustomization.yaml
 │       │
 │       └── overlays
 │           ├── dev
-│           │   ├── kustomization.yaml
+│           │   ├── namespace.yaml
+│           │   ├── serviceaccount.yaml
+│           │   ├── config.yaml
+│           │   ├── hpa.yaml
 │           │   ├── patch-deployment.yaml
 │           │   ├── patch-ingress.yaml
-│           │   └── patch-servicemonitor.yaml
+│           │   ├── patch-servicemonitor.yaml
+│           │   ├── secret.example.yaml
+│           │   └── kustomization.yaml
 │           │
 │           └── prod
-│               ├── kustomization.yaml
+│               ├── namespace.yaml
+│               ├── serviceaccount.yaml
+│               ├── config.yaml
+│               ├── hpa.yaml
 │               ├── patch-deployment.yaml
 │               ├── patch-ingress.yaml
-│               └── patch-servicemonitor.yaml
+│               ├── patch-servicemonitor.yaml
+│               ├── secret.example.yaml
+│               └── kustomization.yaml
 │
 ├── argocd
 │   ├── projects
@@ -85,341 +161,634 @@ team5-config
 │       └── monitoring-applicationset.yaml
 │
 └── monitoring
+    ├── grafana_dashboards
+    │   ├── dev
+    │   │   ├── petcarelog-application-dev.json
+    │   │   ├── petcarelog-kubernetes-dev.json
+    │   │   └── petcarelog-loadtest-dev.json
+    │   │
+    │   └── prod
+    │       ├── petcarelog-application-prod.json
+    │       ├── petcarelog-kubernetes-prod.json
+    │       └── petcarelog-loadtest-prod.json
+    │
     └── kube-prometheus-stack
         ├── values-dev.yaml
         └── values-prod.yaml
 ```
 
----
+<br>
 
-## ☸️ 가동 인프라 리소스 명세
+<a id="prerequisites"></a>
 
-| 쿠버네티스 리소스 | 기술 스택 / 활용 목적 |
-| :--- | :--- |
-| **Namespace** | `petcarelog-dev` / `petcarelog-prod` / `monitoring` 공간 분리 |
-| **Deployment** | Spring Boot 애플리케이션 가동 및 배포 Pod 자동 스케일링 제어 |
-| **Service** | 클러스터 내부 Pod 간 통신을 위한 로컬 로드밸런싱 경로 제공 |
-| **Ingress** | AWS Load Balancer Controller 연동을 통한 인프라 외부 ALB 생성 및 트래픽 라우팅 |
-| **ConfigMap** | Spring 프로필 세팅 등 비민감성 환경 설정 변수 분리 관리 |
-| **Secret** | DB 패스워드, Redis 토큰 등 보안이 필수적인 자격 증명 관리 (**Git 추적 금지**) |
-| **ServiceAccount** | IRSA(IAM Roles for Service Accounts) 기술을 활용해 Pod에 AWS S3 접근 권한 주입 |
-| **ServiceMonitor** | Spring Boot Actuator 메트릭 주소를 프로메테우스 엔진에 자동 타겟팅 연동 |
+## ✅ 사전 요구 사항
 
----
+이 저장소를 적용하기 전에 다음 구성이 필요합니다.
 
-## 🛠️ Kustomize 구조
+| 항목 | 설명 |
+|---|---|
+| AWS CLI | EKS 클러스터 인증 및 kubeconfig 설정 |
+| kubectl | Kubernetes 리소스 적용 및 확인 |
+| kustomize | overlay manifest 렌더링 및 검증 |
+| Helm | kube-prometheus-stack Chart 확인 시 사용 |
+| Argo CD CLI | Argo CD Application 확인 및 동기화 |
+| EKS Cluster | management, dev, prod 클러스터 구성 |
+| AWS Load Balancer Controller | Ingress 기반 ALB 생성 |
+| Prometheus Operator CRD | ServiceMonitor 등 모니터링 리소스 사용 |
+| metrics-server | HPA CPU 기반 오토스케일링 사용 |
 
-공통 리소스는 `base`에 정의하고, 환경별 차이는 `overlays/dev`, `overlays/prod`에서 patch합니다.
+<br>
 
-```text
-base
-→ 공통 Deployment, Service, Ingress, ConfigMap, ServiceAccount, ServiceMonitor
+### kubeconfig 설정 예시
 
-overlays/dev
-→ dev 이미지, dev RDS, dev Redis, dev S3, dev ALB, dev ServiceMonitor label 설정
+```bash
+aws eks update-kubeconfig \
+  --region ap-northeast-2 \
+  --name team5-petcarelog-management-eks
 
-overlays/prod
-→ prod 이미지, prod RDS, prod Redis, prod S3, prod ALB, prod ServiceMonitor label 설정
+aws eks update-kubeconfig \
+  --region ap-northeast-2 \
+  --name team5-petcarelog-dev-eks
+
+aws eks update-kubeconfig \
+  --region ap-northeast-2 \
+  --name team5-petcarelog-prod-eks
 ```
 
-### 🔹 dev overlay
+<br>
 
-dev 환경은 `apps/petcarelog/overlays/dev` 경로를 사용합니다.
+<a id="environment-config"></a>
 
-- 주요 설정: dev ECR 이미지, dev RDS endpoint, dev ElastiCache Redis endpoint, dev S3 bucket, dev Ingress / ALB 설정, dev ServiceMonitor label
+## ⚙️ 환경 구성
 
-### 🔸 prod overlay
+### 애플리케이션 ConfigMap
 
-prod 환경은 `apps/petcarelog/overlays/prod` 경로를 사용합니다.
+각 환경의 비민감 설정은 `config.yaml`에서 관리합니다.
 
-- 주요 설정: prod ECR 이미지, prod RDS endpoint, prod ElastiCache Redis endpoint, prod S3 bucket, prod Ingress / ALB 설정, prod ServiceMonitor label, prod replica 수
+| 파일 | 설명 |
+|---|---|
+| `apps/petcarelog/overlays/dev/config.yaml` | dev RDS, Redis, S3 설정 |
+| `apps/petcarelog/overlays/prod/config.yaml` | prod RDS, Redis, S3 설정 |
 
----
+<br>
 
-## 🐙 Argo CD 구성 및 배포 구조
+ConfigMap에서 관리하는 값은 다음과 같습니다.
+
+| 환경 변수 | 설명 |
+|---|---|
+| `DB_HOST` | RDS MySQL Endpoint |
+| `DB_PORT` | MySQL 포트 |
+| `DB_NAME` | 데이터베이스 이름 |
+| `REDIS_HOST` | ElastiCache Redis Endpoint |
+| `REDIS_PORT` | Redis 포트 |
+| `REDIS_SSL_ENABLED` | Redis SSL 사용 여부 |
+| `AWS_REGION` | AWS 리전 |
+| `S3_BUCKET_NAME` | 반려동물 이미지 저장 S3 버킷 |
+| `S3_PET_IMAGE_PREFIX` | S3 이미지 저장 prefix |
+
+<br>
+
+### 애플리케이션 Secret
+
+민감 정보는 Git에 직접 올리지 않고, `secret.example.yaml`을 참고하여 별도로 생성합니다.
+
+| 파일 | 설명 |
+|---|---|
+| `apps/petcarelog/overlays/dev/secret.example.yaml` | dev Secret 예시 |
+| `apps/petcarelog/overlays/prod/secret.example.yaml` | prod Secret 예시 |
+
+<br>
+
+Secret에서 관리하는 값은 다음과 같습니다.
+
+| 키 | 설명 |
+|---|---|
+| `DB_USERNAME` | DB 사용자명 |
+| `DB_PASSWORD` | DB 비밀번호 |
+| `REDIS_USERNAME` | Redis 사용자명 |
+| `REDIS_PASSWORD` | Redis 비밀번호 |
+
+> 실제 DB 비밀번호, Redis 비밀번호, 인증 정보는 README나 Git 저장소에 작성하지 않습니다.
+
+<br>
+
+### Grafana Admin Secret
+
+`kube-prometheus-stack` values 파일은 Grafana 관리자 계정을 기존 Secret에서 읽도록 설정되어 있습니다.
+
+| Secret 이름 | Key | 설명 |
+|---|---|---|
+| `grafana-admin-secret` | `admin-user` | Grafana 관리자 ID |
+| `grafana-admin-secret` | `admin-password` | Grafana 관리자 비밀번호 |
+
+예시:
+
+```bash
+kubectl create secret generic grafana-admin-secret \
+  -n monitoring \
+  --from-literal=admin-user=admin \
+  --from-literal=admin-password='<CHANGE_ME>'
+```
+
+<br>
+
+<a id="installation"></a>
+
+## 🚀 설치 및 적용 방법
+
+### 1. 저장소 클론
+
+```bash
+git clone https://github.com/CLD-05/team5-config.git
+cd team5-config
+```
+
+<br>
+
+### 2. dev/prod manifest 렌더링 확인
+
+적용 전 Kustomize 결과를 먼저 확인합니다.
+
+```bash
+kubectl kustomize apps/petcarelog/overlays/dev
+kubectl kustomize apps/petcarelog/overlays/prod
+```
+
+또는 kustomize CLI를 사용하는 경우:
+
+```bash
+kustomize build apps/petcarelog/overlays/dev
+kustomize build apps/petcarelog/overlays/prod
+```
+
+<br>
+
+### 3. 애플리케이션 Secret 생성
+
+`secret.example.yaml`을 참고하여 실제 Secret을 생성합니다.
+
+```bash
+kubectl create secret generic petcarelog-secret \
+  -n petcarelog-dev \
+  --from-literal=DB_USERNAME='<DEV_DB_USERNAME>' \
+  --from-literal=DB_PASSWORD='<DEV_DB_PASSWORD>' \
+  --from-literal=REDIS_USERNAME='' \
+  --from-literal=REDIS_PASSWORD=''
+```
+
+```bash
+kubectl create secret generic petcarelog-secret \
+  -n petcarelog-prod \
+  --from-literal=DB_USERNAME='<PROD_DB_USERNAME>' \
+  --from-literal=DB_PASSWORD='<PROD_DB_PASSWORD>' \
+  --from-literal=REDIS_USERNAME='' \
+  --from-literal=REDIS_PASSWORD=''
+```
+
+> Argo CD가 Application을 먼저 생성하는 경우 namespace가 자동 생성될 수 있습니다.  
+> 수동으로 Secret을 먼저 생성해야 한다면 namespace를 먼저 생성하세요.
+
+```bash
+kubectl create namespace petcarelog-dev
+kubectl create namespace petcarelog-prod
+```
+
+<br>
+
+### 4. Grafana Admin Secret 생성
+
+각 환경의 monitoring namespace에 Grafana 관리자 Secret을 생성합니다.
+
+```bash
+kubectl create namespace monitoring
+
+kubectl create secret generic grafana-admin-secret \
+  -n monitoring \
+  --from-literal=admin-user=admin \
+  --from-literal=admin-password='<CHANGE_ME>'
+```
+
+<br>
+
+### 5. Argo CD Project 적용
+
+management EKS의 Argo CD namespace에 AppProject를 적용합니다.
+
+```bash
+kubectl apply -f argocd/projects/petcarelog-dev-project.yaml
+kubectl apply -f argocd/projects/petcarelog-prod-project.yaml
+kubectl apply -f argocd/projects/monitoring-project.yaml
+```
+
+<br>
+
+### 6. Monitoring CRD 먼저 배포
+
+Prometheus Operator CRD가 먼저 설치되어야 ServiceMonitor, PrometheusRule 등의 리소스를 정상적으로 인식할 수 있습니다.
+
+```bash
+kubectl apply -f argocd/applicationsets/monitoring-crds-applicationset.yaml
+```
+
+<br>
+
+### 7. Monitoring Stack 배포
+
+CRD 배포가 완료된 후 kube-prometheus-stack 본체를 배포합니다.
+
+```bash
+kubectl apply -f argocd/applicationsets/monitoring-applicationset.yaml
+```
+
+<br>
+
+### 8. PetCareLog ApplicationSet 배포
+
+```bash
+kubectl apply -f argocd/applicationsets/petcarelog-applicationset.yaml
+```
+
+<br>
+
+<a id="usage"></a>
+
+## 🧪 사용법
+
+### dev 환경 리소스 확인
+
+```bash
+kubectl get all -n petcarelog-dev
+kubectl get ingress -n petcarelog-dev
+kubectl get hpa -n petcarelog-dev
+```
+
+<br>
+
+### prod 환경 리소스 확인
+
+```bash
+kubectl get all -n petcarelog-prod
+kubectl get ingress -n petcarelog-prod
+kubectl get hpa -n petcarelog-prod
+```
+
+<br>
+
+### 애플리케이션 Pod 로그 확인
+
+```bash
+kubectl logs -n petcarelog-dev deploy/petcarelog
+kubectl logs -n petcarelog-prod deploy/petcarelog
+```
+
+<br>
+
+### HPA 확인
+
+```bash
+kubectl get hpa -n petcarelog-dev
+kubectl get hpa -n petcarelog-prod
+```
+
+실시간으로 확인하려면 다음 명령어를 사용합니다.
+
+```bash
+kubectl get hpa -n petcarelog-prod -w
+```
+
+<br>
+
+### Grafana 접속용 Port Forward
+
+```bash
+kubectl port-forward -n monitoring svc/monitoring-dev-grafana 3000:80
+```
+
+또는 prod Grafana 서비스 이름에 맞춰 다음과 같이 접속합니다.
+
+```bash
+kubectl port-forward -n monitoring svc/monitoring-prod-grafana 3000:80
+```
+
+브라우저에서 접속합니다.
+
+```text
+http://localhost:3000
+```
+
+<br>
+
+<a id="argocd"></a>
+
+## 🐙 Argo CD 구성
 
 ### AppProject
 
-AppProject는 Argo CD Application이 접근 가능한 Git repository, cluster, namespace, resource 범위를 제한합니다.
+AppProject는 Application이 접근할 수 있는 Git 저장소, 클러스터, namespace, 리소스 범위를 제한합니다.
 
-- 관리 대상: petcarelog-dev, petcarelog-prod, monitoring
+| 파일 | 설명 |
+|---|---|
+| `argocd/projects/petcarelog-dev-project.yaml` | dev 애플리케이션 배포 권한 범위 |
+| `argocd/projects/petcarelog-prod-project.yaml` | prod 애플리케이션 배포 권한 범위 |
+| `argocd/projects/monitoring-project.yaml` | dev/prod 모니터링 배포 권한 범위 |
+
+<br>
 
 ### ApplicationSet
 
-ApplicationSet은 환경별 Application을 자동 생성합니다.
+ApplicationSet은 dev/prod 환경의 Argo CD Application을 자동 생성합니다.
 
-- 관리 대상: petcarelog-dev, petcarelog-prod, monitoring-crds-dev, monitoring-crds-prod, monitoring-dev, monitoring-prod
+| 파일 | 생성 Application | 설명 |
+|---|---|---|
+| `petcarelog-applicationset.yaml` | `petcarelog-dev`, `petcarelog-prod` | 애플리케이션 배포 |
+| `monitoring-crds-applicationset.yaml` | `monitoring-crds-dev`, `monitoring-crds-prod` | Prometheus Operator CRD 배포 |
+| `monitoring-applicationset.yaml` | `monitoring-dev`, `monitoring-prod` | kube-prometheus-stack 배포 |
 
-### PetCareLog 배포 구조
+<br>
 
-`argocd/applicationsets/petcarelog-applicationset.yaml`은 dev/prod 애플리케이션을 생성합니다.
+<a id="kustomize"></a>
 
-```text
-petcarelog-applicationset
-├── petcarelog-dev
-└── petcarelog-prod
-```
+## 🧩 Kustomize 구성
 
-각 Application은 다음 경로를 참조합니다.
-
-- apps/petcarelog/overlays/dev
-- apps/petcarelog/overlays/prod
-
----
-
-## 📊 모니터링 및 Grafana 대시보드 구조
-
-모니터링은 kube-prometheus-stack을 사용합니다. 리소스 생성을 위한 오퍼레이터 충돌을 방지하기 위해 CRD 패키지와 본체를 분리하여 순차 배포합니다.
-- 구성 요소: Prometheus, Grafana, Alertmanager, Prometheus Operator, Node Exporter, kube-state-metrics
+공통 Kubernetes 리소스는 `base`에 정의하고, 환경별 차이는 `overlays/dev`, `overlays/prod`에서 patch합니다.
 
 ```text
-monitoring-crds-applicationset
-├── monitoring-crds-dev
-└── monitoring-crds-prod
+base
+├── Deployment
+├── Service
+├── Ingress
+└── ServiceMonitor
 
-monitoring-applicationset
-├── monitoring-dev
-└── monitoring-prod
+Overlays
+├── dev
+│   ├── ConfigMap
+│   ├── ServiceAccount
+│   ├── HPA
+│   └── Patch
+│
+└── prod
+    ├── ConfigMap
+    ├── ServiceAccount
+    ├── HPA
+    └── Patch
 ```
 
-> **💡 CRD 선배포 사유:** Prometheus, Alertmanager, ServiceMonitor, PrometheusRule, PodMonitor 등의 리소스들은 Kubernetes 기본 리소스가 아니라 Prometheus Operator CRD가 선행 설치되어야 인식이 가능하기 때문입니다.
+<br>
 
-### 📈 Grafana 환경별 대시보드 구성
+### dev overlay
 
-각 환경은 별도의 Grafana를 사용합니다.
+| 항목 | 설정 |
+|---|---|
+| Namespace | `petcarelog-dev` |
+| Replica | 1 |
+| HPA | min 1 / max 3 |
+| CPU target | 30% |
+| Ingress | dev ALB |
+| ServiceMonitor label | `release: monitoring-dev` |
+| S3 권한 | dev IRSA Role |
 
-- Dev Grafana: Dev Node 모니터링, Dev Kubernetes 모니터링, PetCareLog Dev 애플리케이션 모니터링
-- Prod Grafana: Prod Node 모니터링, Prod Kubernetes 모니터링, PetCareLog Prod 애플리케이션 모니터링
+<br>
 
+### prod overlay
 
-**Node 대시보드**
+| 항목 | 설정 |
+|---|---|
+| Namespace | `petcarelog-prod` |
+| Replica | 2 |
+| HPA | min 2 / max 3 |
+| CPU target | 30% |
+| Ingress | prod ALB + HTTPS |
+| Domain | `petcarelog.yuhyun-lab.cloud` |
+| ServiceMonitor label | `release: monitoring-prod` |
+| S3 권한 | prod IRSA Role |
 
-- Grafana Dashboard Import ID: 19230 - Node Exporter Full with Node Name
+<br>
 
-**Kubernetes 대시보드**
+<a id="monitoring"></a>
 
-- kube-prometheus-stack 기본 대시보드 활용:
-  - Kubernetes / Compute Resources / Cluster
-  - Kubernetes / Compute Resources / Namespace
-  - Kubernetes / Compute Resources / Pod
-  - Kubernetes / Compute Resources / Workload
+## 📊 모니터링 구성
 
-**Application 대시보드**
+모니터링은 `kube-prometheus-stack`을 사용합니다.
 
-PetCareLog 애플리케이션 전용 대시보드는 주요 지표 패널(앱 실행 상태, JVM 메모리, HTTP 요청 수/응답 시간, 활성 DB 커넥션, Pod 자원)을 기준으로 직접 생성합니다.
+| 구성 요소 | 역할 |
+|---|---|
+| Prometheus | 메트릭 수집 및 저장 |
+| Grafana | 메트릭 시각화 |
+| Alertmanager | 알림 관리 |
+| Prometheus Operator | Prometheus 관련 CRD 관리 |
+| kube-state-metrics | Kubernetes 리소스 상태 메트릭 수집 |
+| Node Exporter | 노드 CPU, Memory, Disk 등 시스템 메트릭 수집 |
+| ServiceMonitor | PetCareLog `/actuator/prometheus` 수집 대상 등록 |
 
-- 주요 관제 패널: 앱 실행 상태, JVM 메모리 사용량, 실시간 HTTP 요청 수 및 응답 시간, DB 활성 커넥션 수
-- 대표 PromQL:
+<br>
 
-```promql
-# 애플리케이션 구동 상태 확인 (Up/Down)
-up{namespace="petcarelog-dev"}
+### values 파일
+
+| 파일 | 설명 |
+|---|---|
+| `monitoring/kube-prometheus-stack/values-dev.yaml` | dev 모니터링 설정 |
+| `monitoring/kube-prometheus-stack/values-prod.yaml` | prod 모니터링 설정 |
+
+<br>
+
+### dev/prod 차이
+
+| 항목 | dev | prod |
+|---|---:|---:|
+| Prometheus Retention | 7d | 15d |
+| Prometheus CPU Request | 200m | 300m |
+| Prometheus Memory Request | 512Mi | 1Gi |
+| Prometheus CPU Limit | 500m | 700m |
+| Prometheus Memory Limit | 1Gi | 2Gi |
+| Grafana PVC | 5Gi | 5Gi |
+
+<br>
+
+<a id="grafana-dashboard"></a>
+
+## 📈 Grafana Dashboard
+
+Grafana Dashboard JSON은 환경별로 분리하여 관리합니다.
+
+```text
+monitoring/grafana_dashboards
+├── dev
+│   ├── petcarelog-application-dev.json
+│   ├── petcarelog-kubernetes-dev.json
+│   └── petcarelog-loadtest-dev.json
+│
+└── prod
+    ├── petcarelog-application-prod.json
+    ├── petcarelog-kubernetes-prod.json
+    └── petcarelog-loadtest-prod.json
 ```
 
-```promql
-# JVM 힙 메모리 실시간 사용량 추적
-jvm_memory_used_bytes{namespace="petcarelog-dev"}
+<br>
+
+### Dashboard 종류
+
+| Dashboard | 설명 |
+|---|---|
+| Application Dashboard | JVM, HTTP 요청 수, 응답 시간, DB 커넥션 등 애플리케이션 지표 확인 |
+| Kubernetes Dashboard | Pod, Deployment, Namespace, 리소스 사용량 확인 |
+| Load Test Dashboard | 부하 테스트 시 요청 수, Pod 증가, HPA 동작, 응답 시간 변화 확인 |
+
+<br>
+
+### 부하 테스트 시 확인할 지표
+
+| 지표 | 확인 목적 |
+|---|---|
+| HTTP Request Rate | 트래픽 증가 여부 확인 |
+| Response Time | 부하 상황에서 응답 시간 변화 확인 |
+| 5xx Error Rate | 장애 또는 서버 오류 발생 여부 확인 |
+| JVM Heap Usage | 애플리케이션 메모리 사용량 확인 |
+| Pod Replicas | HPA에 의한 Pod 확장 확인 |
+| CPU Usage | HPA 기준 지표 확인 |
+
+<br>
+
+<a id="deployment-flow"></a>
+
+## 🔄 배포 흐름
+
+```text
+1. 개발자가 team5-app에 코드 push
+2. GitHub Actions 실행
+3. Docker 이미지 빌드
+4. Amazon ECR에 이미지 push
+5. team5-config의 overlay 이미지 태그 수정
+6. Argo CD가 Git 변경사항 감지
+7. dev/prod EKS에 Kubernetes 리소스 동기화
+8. ServiceMonitor를 통해 Prometheus가 메트릭 수집
+9. Grafana에서 애플리케이션과 클러스터 상태 확인
 ```
 
-```promql
-# HikariCP 활성 데이터베이스 커넥션 갯수 관제
-hikaricp_connections_active{namespace="petcarelog-dev"}
-```
+<br>
 
-```promql
-# 톰캣 서버가 처리 중인 실시간 HTTP 총 요청 수
-http_server_requests_seconds_count{namespace="petcarelog-dev"}
-```
+### 이미지 태그 변경 위치
 
-(※prod 환경의 경우 namespace="petcarelog-prod"로 변경하여 사용)
+| 환경 | 파일 |
+|---|---|
+| dev | `apps/petcarelog/overlays/dev/patch-deployment.yaml` |
+| prod | `apps/petcarelog/overlays/prod/patch-deployment.yaml` |
 
----
+<br>
 
-## 🚀 사전 인프라 준비 사항
-이 저장소의 설정을 적용하기 전, team5-infra의 테라폼 배포가 완벽하게 완료되어 아래 인프라 요소(management/dev/prod EKS, ECR, RDS, Redis, S3, IAM/IRSA 등)가 AWS 상에 가동 중이어야 합니다.
+<a id="notes"></a>
 
-### 1. 타겟 클러스터 및 로컬 kubeconfig Context 동기화
-팀 공용 자격 증명(--profile project2) 프로필을 장착한 후, 로컬 컴퓨터에 3개의 클러스터 컨텍스트를 동기화합니다
+## ⚠️ 운영 시 주의 사항
+
+### 1. Secret은 Git에 커밋하지 않기
+
+`secret.example.yaml`은 예시 파일입니다. 실제 DB 비밀번호, Redis 비밀번호, Grafana 관리자 비밀번호는 Git에 커밋하지 않습니다.
+
+<br>
+
+### 2. CRD를 먼저 배포하기
+
+`ServiceMonitor`는 Kubernetes 기본 리소스가 아니라 Prometheus Operator CRD입니다.  
+따라서 `monitoring-crds-applicationset.yaml`을 먼저 배포한 뒤 `monitoring-applicationset.yaml`을 배포해야 합니다.
+
+<br>
+
+### 3. ServiceMonitor label 확인하기
+
+Prometheus가 ServiceMonitor를 수집하려면 Helm release label이 맞아야 합니다.
+
+| 환경 | label |
+|---|---|
+| dev | `release: monitoring-dev` |
+| prod | `release: monitoring-prod` |
+
+<br>
+
+### 4. HPA 사용 전 metrics-server 확인하기
+
+HPA가 CPU 사용률 기준으로 동작하려면 metrics-server가 정상 동작해야 합니다.
+
 ```bash
-# 1. Management 클러스터 연결
-aws eks update-kubeconfig --region ap-northeast-2 --name team5-petcarelog-management-eks --profile project2
-
-# 2. Dev 클러스터 연결
-aws eks update-kubeconfig --region ap-northeast-2 --name team5-petcarelog-dev-eks --profile project2
-
-# 3. Prod 클러스터 연결
-aws eks update-kubeconfig --region ap-northeast-2 --name team5-petcarelog-prod-eks --profile project2
+kubectl top nodes
+kubectl top pods -n petcarelog-dev
+kubectl top pods -n petcarelog-prod
 ```
 
-### 2. Management 클러스터에 Argo CD 핵심 사령탑 가동 및 로그인
-```bash
-# 콘텍스트를 중앙 매니지먼트로 고정
-kubectl config use-context arn:aws:eks:ap-northeast-2:<ACCOUNT_ID>:cluster/team5-petcarelog-management-eks
+<br>
 
-# Argo CD 전용 네임스페이스 생성 및 엔진 가동
-kubectl create namespace argocd
-kubectl apply -n argocd -f [https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml](https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml)
+### 5. prod Ingress는 HTTPS 설정 확인하기
 
-# Argo CD 서버 제어 웹 접근을 위한 로컬 포트포워딩 터널 가동 (터미널 대기 유지)
-kubectl port-forward svc/argocd-server -n argocd 8080:443
-```
-새로운 터미널 창을 열어 관리자 초기 비밀번호 확인 후 CLI 로그인을 마칩니다.
+prod Ingress는 HTTPS 리스너와 ACM 인증서를 사용합니다.  
+도메인, 인증서 ARN, Route 53 레코드가 올바르게 연결되어 있어야 합니다.
+
+<br>
+
+## 🔍 유용한 명령어
+
+### Argo CD Application 확인
 
 ```bash
-# 초기 비밀번호 디코딩 확인
-kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 -d
-
-# Argo CD CLI 로그인 수행
-argocd login localhost:8080 --insecure
-# Username: admin / Password: 위에서 확인한 암호 입력
-```
-### 3. Argo CD 원격 클러스터(dev/prod) 가입 등록
-```bash
-# 원격 타겟 배포 클러스터 최종 등록 연동
-argocd cluster add arn:aws:eks:ap-northeast-2:<ACCOUNT_ID>:cluster/team5-petcarelog-dev-eks
-argocd cluster add arn:aws:eks:ap-northeast-2:<ACCOUNT_ID>:cluster/team5-petcarelog-prod-eks
+argocd app list
 ```
 
----
+<br>
 
-## 🔑보안 관리 및 로컬 Secret 수동 생성 가이드
-> **⚠️ 보안 수칙**  
-> 데이터베이스 암호 및 그라파나 마스터 패스워드가 포함된 실제 Secret 매니페스트 파일은 절대로 GitHub 저장소에 push하지 않습니다.  
-> 배포 전 각 클러스터 타겟팅 콘텍스트로 이동하여 수동 인라인 명령어로 선배포를 완료해야 합니다.
-
-### 1. PetCareLog 애플리케이션 연동 데이터베이스 암호 주입
-```bash
-# DEV EKS 진입 후 수동 주입
-kubectl config use-context arn:aws:eks:ap-northeast-2:<ACCOUNT_ID>:cluster/team5-petcarelog-dev-eks
-kubectl create namespace petcarelog-dev
-kubectl create secret generic petcarelog-secret -n petcarelog-dev \
-  --from-literal=DB_USERNAME='petcarelog' \
-  --from-literal=DB_PASSWORD='실제_DEV_DB_PASSWORD' \
-  --from-literal=REDIS_USERNAME='' \
-  --from-literal=REDIS_PASSWORD=''
-
-# PROD EKS 진입 후 수동 주입
-kubectl config use-context arn:aws:eks:ap-northeast-2:<ACCOUNT_ID>:cluster/team5-petcarelog-prod-eks
-kubectl create namespace petcarelog-prod
-kubectl create secret generic petcarelog-secret -n petcarelog-prod \
-  --from-literal=DB_USERNAME='petcarelog' \
-  --from-literal=DB_PASSWORD='실제_PROD_DB_PASSWORD' \
-  --from-literal=REDIS_USERNAME='' \
-  --from-literal=REDIS_PASSWORD=''
-```
-
-### 2. Grafana 마스터 계정 암호 주입
-```bash
-# DEV 모니터링 전용 Secret 주입
-kubectl config use-context arn:aws:eks:ap-northeast-2:<ACCOUNT_ID>:cluster/team5-petcarelog-dev-eks
-kubectl create namespace monitoring
-kubectl create secret generic grafana-admin-secret -n monitoring \
-  --from-literal=admin-user='admin' \
-  --from-literal=admin-password='실제_DEV_GRAFANA_PASSWORD'
-
-# PROD 모니터링 전용 Secret 주입
-kubectl config use-context arn:aws:eks:ap-northeast-2:<ACCOUNT_ID>:cluster/team5-petcarelog-prod-eks
-kubectl create namespace monitoring
-kubectl create secret generic grafana-admin-secret -n monitoring \
-  --from-literal=admin-user='admin' \
-  --from-literal=admin-password='실제_PROD_GRAFANA_PASSWORD'
-```
-
----
-
-## ⚡ 최종 인프라 적용 순서
-모든 선언적 자동화 제어 명령은 중앙 Management EKS 콘텍스트 환경에서 일괄 실행합니다.
+### 특정 Application 동기화
 
 ```bash
-# 마스터 콘텍스트 고정 복귀
-kubectl config use-context arn:aws:eks:ap-northeast-2:<ACCOUNT_ID>:cluster/team5-petcarelog-management-eks
-
-# 1단계: 접근 제어용 AppProject 적용 규칙 가동
-kubectl apply -f argocd/projects/
-
-# 2단계: PetCareLog core 코어 애플리케이션셋 배포 가동
-kubectl apply -f argocd/applicationsets/petcarelog-applicationset.yaml
-
-# 3단계: [선행 작업] 프로메테우스 오퍼레이터 CRD 인프라 선배포 및 동기화
-kubectl apply -f argocd/applicationsets/monitoring-crds-applicationset.yaml
-argocd app sync monitoring-crds-dev
-argocd app sync monitoring-crds-prod
-
-# 4단계: [후행 작업] CRD 설치 최종 확인 후 모니터링 통합 본체 패키지 배포 및 동기화
-kubectl apply -f argocd/applicationsets/monitoring-applicationset.yaml
-argocd app sync monitoring-dev
-argocd app sync monitoring-prod
+argocd app sync petcarelog-dev
+argocd app sync petcarelog-prod
 ```
 
----
+<br>
 
-## 🚨 트러블슈팅 가이드
-### Application이 Unknown / Degraded인 경우
-> **원인:** Argo CD에서 애플리케이션 상태가 정상적으로 동기화되지 않거나 구동에 실패함.  
-> **상세 메시지 확인 명령어:**
+### Ingress 주소 확인
+
 ```bash
-argocd app get <APPLICATION_NAME>
-# 또는
-kubectl describe application <APPLICATION_NAME> -n argocd
-```
-- **주요 체크리스트:** repoURL 오타 여부, Private 레포지토리 토큰 인증 문제, AppProject destination 및 sourceRepos 명세 불일치, 네임스페이스 권한 누락 여부 검증
-
-### namespace is not permitted in project 에러 발생 시
-> **원인:** AppProject가 접근할 수 있도록 허용된 Namespace 범위를 벗어난 곳에 배포를 시도함.  
-> **해결 방법:** AppProject 제어 설정 파일의 destinations 항목에 해당 대상을 수동 명시해야 합니다.
-```YAML
-destinations:
-  - server: DEV_CLUSTER_SERVER_URL
-    namespace: monitoring
-  - server: DEV_CLUSTER_SERVER_URL
-    namespace: kube-system
+kubectl get ingress -n petcarelog-dev
+kubectl get ingress -n petcarelog-prod
 ```
 
-### unable to resolve parseableType for GroupVersionKind 에러 발생 시
-> **원인:** Prometheus Operator CRD(사용자 정의 리소스 정의)가 클러스터에 먼저 설치되지 않은 상태에서 Alertmanager, Prometheus, ServiceMonitor 등의 커스텀 리소스를 비교·배포하려고 했을 때 발생합니다.  
-> **해결 방법:** 반드시 위의 '최종 인프라 배포 적용 순서' 파이프라인 단계를 엄수하여 CRD 설치셋(3단계)을 완전히 가동 및 동기화한 뒤 본체 세트(4단계)를 통과시키십시오.
+<br>
 
-### Grafana 대시보드 화면에서 No data가 출력되는 경우
-> **원인:** 환경별 콘텍스트(Context) 조회 오류 또는 메트릭 수집 타겟 라우팅 단절.  
-> **주요 체크리스트:** Dev 그라파나 관제 환경에서 실수로 Prod 네임스페이스를 역조회하고 있지 않은지 확인, 프로메테우스 타겟 수집 상태 확인(kubectl get servicemonitor -A)
+### Pod 상태 확인
 
-### /actuator/prometheus 접속 시 로그인 페이지가 강제 팝업되는 경우
-> **원인:** Spring Security 보안 정책에 의해 프로메테우스 메트릭 수집 경로가 차단됨.  
-> **해결 방법:** Spring Boot 애플리케이션 소스코드의 보안 설정에서 관련 Endpoint가 인가 없이 접근할 수 있도록 permitAll() 처리가 되어야 합니다.
-```java
-.requestMatchers(
-    "/actuator/health",
-    "/actuator/info",
-    "/actuator/prometheus"
-).permitAll()
+```bash
+kubectl get pods -n petcarelog-dev
+kubectl get pods -n petcarelog-prod
 ```
 
----
+<br>
 
-## 🔒 AWS 공용 계정 보안 및 이용 수칙
-### [Access Key 관리 정책]
-  - 본인 키 일시 비활성화 (분실 의심 시 즉시)
-  - 본인 키 재활성화
+### ServiceMonitor 확인
 
-**키 분실·노출 의심 시:**
-  1. 즉시 본인이 키 비활성화:
-     aws iam update-access-key --user-name team5-ssm \
-       --access-key-id AKIAxxx --status Inactive
-  2. 강사진에게 즉시 보고
+```bash
+kubectl get servicemonitor -n petcarelog-dev
+kubectl get servicemonitor -n petcarelog-prod
+```
 
-### [보안 수칙]
-1. 절대 Access Key를 Git에 push 금지
-   .gitignore에 .aws/, *.pem, credentials 등록
-2. 의심 시 즉시 키 비활성화
-3. MFA 등록 권장
+<br>
 
-### [사용 안내]
-- 공식 사용은 프로젝트 진행일 09:00 - 18:00에만 가능
-- 18:00 이후 접근 차단
-- 모든 api 호출 기록은 trail에 기록
-- 개인적인 용도로 사용 금지
-- 비정상적인 접근 및 시스템에 영향을 주는 행위시 법적 책임
+<a id="contributors"></a>
 
-### [금지 사항]
-- 다른 팀 자원 접근·변경
-- 비효율적인 자원 무단 생성 (GPU 인스턴스, 대형 RDS 등)
+## 👥 저자 및 기여자
+
+| 이름 | 역할 |
+|---|---|
+| 김유현 | 팀장 |
+| 고윤성 | 팀원 |
+| 이재윤 | 팀원 |
+| 유관호 | 팀원 |
+| 신솔미 | 팀원 |
+| 김광호 | 팀원 |
+
+> 실제 팀원 이름과 담당 역할에 맞게 수정해 주세요.
+
+<br>
+
+## 📌 참고
+
+- 이 저장소는 애플리케이션 소스 코드 저장소가 아닙니다.
+- 애플리케이션 코드는 `team5-app`에서 관리합니다.
+- AWS 인프라 코드는 `team5-infra`에서 관리합니다.
+- Kubernetes 배포 상태는 이 저장소의 manifest를 기준으로 Argo CD가 동기화합니다.
+
